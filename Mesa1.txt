@@ -1,0 +1,1 @@
+{"idItem":0,"quantidadeItem":3,"descricaoItem":"Porção Trio Mineiro","refNumMesa":1}
