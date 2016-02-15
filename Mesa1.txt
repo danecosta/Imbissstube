@@ -1,0 +1,1 @@
+{"idItem":0,"quantidadeItem":4,"descricaoItem":"Porção de Camarão Frito","refNumMesa":1}

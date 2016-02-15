@@ -3,6 +3,7 @@ package trabalholanchonete;
 import Entidades.Mesa;
 import Entidades.Item;
 import DAO.ItemDAO;
+import Persistencia.IPersistencia;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.GregorianCalendar;
@@ -16,6 +17,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import Persistencia.Serializacao;
 import Persistencia.Textualizacao;
+import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,7 @@ import java.util.List;
  * @author Dane
  */
 public class JanelaLanchonete extends javax.swing.JFrame {
-    
+
     JanelaRelatorioIndividual relatorioIndv = new JanelaRelatorioIndividual();
     JanelaRelatorio relatorio = new JanelaRelatorio();
 
@@ -33,7 +35,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
      */
     public JanelaLanchonete() {
         initComponents();
-        
+
         ButtonGroup bgMesas = new ButtonGroup();
         bgMesas.add(rbMesa1);
         bgMesas.add(rbMesa2);
@@ -47,12 +49,12 @@ public class JanelaLanchonete extends javax.swing.JFrame {
 
         //Preenche Cardápio
         preencheItens();
-        
+
         verificaMesasOcupadas();
-        
+
         travaCampos();
     }
-    
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -424,9 +426,9 @@ public class JanelaLanchonete extends javax.swing.JFrame {
 
     private void btnAdicionarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdicionarActionPerformed
         DefaultListModel<Item> modelSelecionado = (DefaultListModel<Item>) retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().getModel();
-        
+
         boolean verificaCampos = validaCampos(txtQtd.getText(), cbItens.getSelectedIndex());
-        
+
         if (verificaCampos) {
             Item p = new Item();
 
@@ -435,14 +437,14 @@ public class JanelaLanchonete extends javax.swing.JFrame {
                 retornaMesaPorNumero(guardaMesaSelecionada).setHoraAbertura(setaHoraMesa());
                 lblHora.setText(retornaMesaPorNumero(guardaMesaSelecionada).getHoraAbertura());
             }
-            
+
             p.setDescricaoItem(cbItens.getSelectedItem().toString());
             p.setQuantidadeItem(Integer.parseInt(txtQtd.getText()));
             p.setRefNumMesa(guardaMesaSelecionada);
             modelSelecionado.addElement(p);
-            
+
             lstTela.setModel(modelSelecionado);
-            
+
             txtQtd.setText("");
             cbItens.setSelectedIndex(0);
         }
@@ -450,7 +452,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
 
     private void btnFecharPedidoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFecharPedidoActionPerformed
         int resposta = JOptionPane.showConfirmDialog(null, "Deseja fechar o pedido dessa mesa?");
-        
+
         if (resposta == JOptionPane.YES_OPTION) {
             retornaMesaPorNumero(guardaMesaSelecionada).setHoraFechamento(setaHoraMesa());
 
@@ -460,7 +462,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
             rltIndividual.setVisible(true);
             rltIndividual.setLocationRelativeTo(null);
             rltIndividual.txtAreaRelatorioIndv.setEditable(false);
-            
+
             travaCampos();
             retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().setModel(new DefaultListModel<>());
             lstTela.setModel(new DefaultListModel<>());
@@ -482,14 +484,14 @@ public class JanelaLanchonete extends javax.swing.JFrame {
 
     private void btnExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirActionPerformed
         DefaultListModel<Item> model = (DefaultListModel<Item>) lstTela.getModel();
-        
+
         model.removeElement(lstTela.getSelectedValue());
         retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().setModel(model);
     }//GEN-LAST:event_btnExcluirActionPerformed
 
     private void btnRelatorioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRelatorioActionPerformed
         relatorio.txtAreaRelatorio.setText("");
-        
+
         String[] lstPedidos = {
             retornaRelatorioPorMesa(1),
             retornaRelatorioPorMesa(2),
@@ -500,11 +502,11 @@ public class JanelaLanchonete extends javax.swing.JFrame {
             retornaRelatorioPorMesa(7),
             retornaRelatorioPorMesa(8),
             retornaRelatorioPorMesa(9)};
-        
+
         for (String mesa : lstPedidos) {
             relatorio.txtAreaRelatorio.append(mesa + "\n");
         }
-        
+
         relatorio.setVisible(true);
         relatorio.setLocationRelativeTo(null);
     }//GEN-LAST:event_btnRelatorioActionPerformed
@@ -517,75 +519,52 @@ public class JanelaLanchonete extends javax.swing.JFrame {
     //Opções de Persistência de Entrada
     private void cbPersistenciaInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbPersistenciaInActionPerformed
         String opcao = cbPersistenciaIn.getModel().getSelectedItem().toString();
-        
+
         switch (opcao) {
             case "Arquivo Texto":
                 try {
                     Textualizacao text = new Textualizacao();
-                    
-                    for (int numeroMesa = 1; numeroMesa < 10; numeroMesa++) {
-                        List<Item> arquivoMesa = text.LeArquivoTexto("Mesa" + numeroMesa + ".TXT");
-                        guardaMesaSelecionada = numeroMesa;
-                        
-                        DefaultListModel<Item> model = (DefaultListModel<Item>) retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().getModel();
-                        
-                        for (Item i : arquivoMesa) {
-                            model.addElement(i);
-                        }
-                    }
-                    
-                    verificaMesasOcupadas();
-                    
-                    JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Dados recuperados com sucesso!");
-                    cbPersistenciaIn.setSelectedIndex(0);
+                    instanciaLeituraMesa(text, "Mesa", ".txt");
+
                 } catch (Exception ex) {
                     Logger.getLogger(JanelaLanchonete.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 break;
-            
+
             case "Arquivo Serializado":
                 try {
                     Serializacao serializa = new Serializacao();
-                    
-                    for (int numeroMesa = 1; numeroMesa < 10; numeroMesa++) {
-                        Object arquivoMesa = serializa.LerArquivoSerializado("ArqConvMesa" + numeroMesa);
-                        guardaMesaSelecionada = numeroMesa;
-                        retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().setModel((DefaultListModel<Item>) arquivoMesa);
-                    }
-                    
-                    verificaMesasOcupadas();
-                    
-                    JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Dados recuperados com sucesso!");
-                    cbPersistenciaIn.setSelectedIndex(0);
+                    instanciaLeituraMesa(serializa, "ArqConvMesa", "");
+
                 } catch (Exception ex) {
                     Logger.getLogger(JanelaLanchonete.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 break;
-            
+
             case "Banco de Dados":
                 try {
                     ItemDAO dao = new ItemDAO();
-                    
+
                     for (int numeroMesa = 1; numeroMesa < 10; numeroMesa++) {
                         List<Item> arquivoMesa = dao.buscarItensPorMesa(numeroMesa);
                         guardaMesaSelecionada = numeroMesa;
-                        
+
                         DefaultListModel<Item> model = (DefaultListModel<Item>) retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().getModel();
-                        
+
                         for (Item i : arquivoMesa) {
                             model.addElement(i);
                         }
-                    }                    
-                    
+                    }
+
                     verificaMesasOcupadas();
-                    
+
                     JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Dados recuperados com sucesso!");
                     cbPersistenciaIn.setSelectedIndex(0);
                 } catch (Exception ex) {
                     Logger.getLogger(JanelaLanchonete.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 break;
-            
+
             default:
                 break;
         }
@@ -594,57 +573,48 @@ public class JanelaLanchonete extends javax.swing.JFrame {
     //Opções de Persistência de Saída
     private void cbPersistenciaOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbPersistenciaOutActionPerformed
         String opcao = cbPersistenciaOut.getModel().getSelectedItem().toString();
-        
+
         DefaultListModel<DefaultListModel<Item>> modelSelecionado = new DefaultListModel<>();
         modelSelecionado = PreencheModelTodasMesas(modelSelecionado);
-        
+
         switch (opcao) {
             case "Arquivo Texto":
                 try {
-                    Textualizacao pTexto = new Textualizacao();
-                    
-                    for (int i = 0; i < modelSelecionado.size(); i++) {
-                        //Pega mesa
-                        DefaultListModel<Item> modelDaMesa = modelSelecionado.getElementAt(i);
-                        int numItensMesa = modelDaMesa.size();
-                        List<Item> listaDeItens = new ArrayList<>();
-                        //Percorre itens da mesa
-                        for (int k = 0; k < numItensMesa; k++) {
-                            Item item = modelDaMesa.getElementAt(k);
-                            item.setRefNumMesa(k+1);
-                            listaDeItens.add(item);
-                        }
-                        pTexto.GeraArquivoTexto(listaDeItens, (i + 1));
-                    }
-                    
-                    JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Arquivos Texto criados com sucesso!");
-                    cbPersistenciaOut.setSelectedIndex(0);
+                    Textualizacao text = new Textualizacao();
+                    instanciaGravacaoMesa(modelSelecionado, text);
+
                 } catch (Exception ex) {
                     Logger.getLogger(JanelaLanchonete.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 break;
-            
+
             case "Arquivo Serializado":
                 try {
                     Serializacao serializa = new Serializacao();
-                    
-                    for (int i = 0; i < modelSelecionado.size(); i++) {
-                        serializa.GerarArquivoSerializado("ArqConvMesa" + (i + 1), modelSelecionado.getElementAt(i));
-                    }
-                    
-                    JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Arquivos Serializados criados com sucesso!");
-                    cbPersistenciaOut.setSelectedIndex(0);
+                    instanciaGravacaoMesa(modelSelecionado, serializa);
+
                 } catch (Exception ex) {
                     Logger.getLogger(JanelaLanchonete.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 break;
-            
+
             case "Banco de Dados":
                 try {
                     ItemDAO itemDAO = new ItemDAO();
                     Item item = new Item();
-                    
+
                     for (int i = 0; i < modelSelecionado.getSize(); i++) {
+                        //Busca itens já salvos para a mesa
+                        List<Item> ItensDaMesa = itemDAO.buscarItensPorMesa(i + 1);
+
+                        //Verifica se tem itens j para a mesa e exclui
+                        if (ItensDaMesa.size() > 0) {
+                            for (Item itemSalvo : ItensDaMesa) {
+                                itemDAO.remover(itemSalvo);
+                            }
+                        }
+
+                        //Salva novos itens da mesa
                         for (int j = 0; j < modelSelecionado.get(i).size(); j++) {
                             item.setDescricaoItem(modelSelecionado.get(i).getElementAt(j).getDescricaoItem());
                             item.setQuantidadeItem(modelSelecionado.get(i).getElementAt(j).getQuantidadeItem());
@@ -652,19 +622,19 @@ public class JanelaLanchonete extends javax.swing.JFrame {
                             itemDAO.inserir(item);
                         }
                     }
-                    
+
                     JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Arquivos salvos no Banco de Dados com sucesso!");
                     cbPersistenciaOut.setSelectedIndex(0);
                 } catch (Exception ex) {
                     Logger.getLogger(JanelaLanchonete.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 break;
-            
+
             default:
                 break;
         }
     }//GEN-LAST:event_cbPersistenciaOutActionPerformed
-    
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -735,7 +705,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
     Mesa mesa7 = new Mesa(7, new JList<>(new DefaultListModel<>()), "", "");
     Mesa mesa8 = new Mesa(8, new JList<>(new DefaultListModel<>()), "", "");
     Mesa mesa9 = new Mesa(9, new JList<>(new DefaultListModel<>()), "", "");
-    
+
     private int guardaMesaSelecionada;
 
     //Se a mesa estiver ocupada (com pedido na lista), label de cor vermelha.
@@ -757,49 +727,49 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         } else {
             rbMesa1.setForeground(Color.BLUE);
         }
-        
+
         if (mesa2.getLstMesa().getModel().getSize() > 0) {
             rbMesa2.setForeground(Color.RED);
         } else {
             rbMesa2.setForeground(Color.BLUE);
         }
-        
+
         if (mesa3.getLstMesa().getModel().getSize() > 0) {
             rbMesa3.setForeground(Color.RED);
         } else {
             rbMesa3.setForeground(Color.BLUE);
         }
-        
+
         if (mesa4.getLstMesa().getModel().getSize() > 0) {
             rbMesa4.setForeground(Color.RED);
         } else {
             rbMesa4.setForeground(Color.BLUE);
         }
-        
+
         if (mesa5.getLstMesa().getModel().getSize() > 0) {
             rbMesa5.setForeground(Color.RED);
         } else {
             rbMesa5.setForeground(Color.BLUE);
         }
-        
+
         if (mesa6.getLstMesa().getModel().getSize() > 0) {
             rbMesa6.setForeground(Color.RED);
         } else {
             rbMesa6.setForeground(Color.BLUE);
         }
-        
+
         if (mesa7.getLstMesa().getModel().getSize() > 0) {
             rbMesa7.setForeground(Color.RED);
         } else {
             rbMesa7.setForeground(Color.BLUE);
         }
-        
+
         if (mesa8.getLstMesa().getModel().getSize() > 0) {
             rbMesa8.setForeground(Color.RED);
         } else {
             rbMesa8.setForeground(Color.BLUE);
         }
-        
+
         if (mesa9.getLstMesa().getModel().getSize() > 0) {
             rbMesa9.setForeground(Color.RED);
         } else {
@@ -815,7 +785,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         mesa.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         mesa.setForeground(Color.DARK_GRAY);
     }
-    
+
     private Mesa retornaMesaPorNumero(int numero) {
         switch (numero) {
             case 1:
@@ -837,7 +807,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
             case 9:
                 return mesa9;
         }
-        
+
         return null;
     }
 
@@ -858,7 +828,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         cbItens.addItem("Cerveja Artesanal");
         cbItens.addItem("Taças de Vinho");
     }
-    
+
     private void destravaCampos() {
         btnAdicionar.setEnabled(true);
         btnExcluir.setEnabled(true);
@@ -867,13 +837,13 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         cbPersistenciaOut.setEnabled(false);
         cbPersistenciaIn.setEnabled(false);
         btnCancelar.setEnabled(true);
-        
+
         txtQtd.setEnabled(true);
         cbItens.setEnabled(true);
         lblHora.setText(retornaMesaPorNumero(guardaMesaSelecionada).getHoraAbertura());
         lstTela.setModel((DefaultListModel<Item>) retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().getModel());
     }
-    
+
     private void travaCampos() {
         btnAdicionar.setEnabled(false);
         btnExcluir.setEnabled(false);
@@ -882,35 +852,35 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         cbPersistenciaOut.setEnabled(true);
         cbPersistenciaIn.setEnabled(true);
         btnCancelar.setEnabled(false);
-        
+
         txtQtd.setEnabled(false);
         cbItens.setEnabled(false);
-        
+
         lblMesaSelecionada.setText("");
         lstTela.setModel(new DefaultListModel<>());
-        
+
         cbItens.setSelectedIndex(0);
         txtQtd.setText("");
-        
+
         verificaMesasOcupadas();
     }
-    
+
     private String setaHoraMesa() {
-        
+
         GregorianCalendar gc = new GregorianCalendar();
-        
+
         int hora = gc.get(gc.HOUR_OF_DAY);
         int minutos = gc.get(gc.MINUTE);
         int dia = gc.get(gc.DATE);
-        
+
         return (String.valueOf(dia) + "/02/2016 às "
                 + String.valueOf(hora) + ":"
                 + String.valueOf(minutos));
     }
-    
+
     private void instanciaMesa() {
         DefaultListModel<Item> modelSelecionado = (DefaultListModel<Item>) retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().getModel();
-        
+
         cbItens.setSelectedIndex(0);
         txtQtd.setText("");
 
@@ -926,7 +896,7 @@ public class JanelaLanchonete extends javax.swing.JFrame {
             destravaCampos();
         }
     }
-    
+
     private boolean validaCampos(String qtd, int index) {
         boolean podeAdicionar = true;
         if (qtd.length() == 0 || index == 0) {
@@ -935,10 +905,10 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         }
         return podeAdicionar;
     }
-    
+
     private String retornaRelatorioPorMesa(int numero) {
         String retorno;
-        
+
         if (retornaMesaPorNumero(numero).getLstMesa().getModel().getSize() > 0) {
             retorno = "Mesa " + numero + " \n"
                     + "Itens: " + retornaMesaPorNumero(numero).getLstMesa().getModel().toString()
@@ -947,16 +917,55 @@ public class JanelaLanchonete extends javax.swing.JFrame {
         } else {
             retorno = "Mesa " + numero + " vazia. \n";
         }
-        
+
         return retorno;
     }
-    
+
     private DefaultListModel<DefaultListModel<Item>> PreencheModelTodasMesas(DefaultListModel<DefaultListModel<Item>> modelSelecionado) {
-        
+
         for (int i = 0; i < 9; i++) {
             modelSelecionado.add(i, (DefaultListModel<Item>) retornaMesaPorNumero(i + 1).getLstMesa().getModel());
         }
-        
+
         return modelSelecionado;
+    }
+
+    public void instanciaGravacaoMesa(DefaultListModel<DefaultListModel<Item>> modelSelecionado, IPersistencia persistencia) throws HeadlessException {
+        for (int i = 0; i < modelSelecionado.size(); i++) {
+            //Pega mesa
+            DefaultListModel<Item> modelDaMesa = modelSelecionado.getElementAt(i);
+            int numItensMesa = modelDaMesa.size();
+            List<Item> listaDeItens = new ArrayList<>();
+            //Percorre itens da mesa
+            for (int k = 0; k < numItensMesa; k++) {
+                Item item = modelDaMesa.getElementAt(k);
+                item.setRefNumMesa(k + 1);
+                listaDeItens.add(item);
+            }
+            persistencia.GerarArquivo(listaDeItens, (i + 1));
+        }
+
+        JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Arquivos Texto criados com sucesso!");
+        cbPersistenciaOut.setSelectedIndex(0);
+    }
+
+    public void instanciaLeituraMesa(IPersistencia persistencia, String nomeArquivo, String extensao) throws HeadlessException {
+        for (int numeroMesa = 1; numeroMesa < 10; numeroMesa++) {
+            Object arquivoMesa = persistencia.LerArquivo(nomeArquivo + numeroMesa + extensao);
+            guardaMesaSelecionada = numeroMesa;
+
+            DefaultListModel<Item> model = (DefaultListModel<Item>) retornaMesaPorNumero(guardaMesaSelecionada).getLstMesa().getModel();
+            model.removeAllElements();
+
+            List<Item> listaMesa = (List<Item>) arquivoMesa;
+            for (Item i : listaMesa) {
+                model.addElement(i);
+            }
+        }
+
+        verificaMesasOcupadas();
+
+        JOptionPane.showMessageDialog(JOptionPane.getRootFrame(), "Dados recuperados com sucesso!");
+        cbPersistenciaIn.setSelectedIndex(0);
     }
 }

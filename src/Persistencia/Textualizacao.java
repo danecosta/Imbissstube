@@ -15,17 +15,16 @@ import java.util.Scanner;
  *
  * @author Dane
  */
-public class Textualizacao {
+public class Textualizacao implements IPersistencia {
 
-    String caminhoArquivos = "C:\\Users\\Daniela\\Desktop\\TrabalhoLanchonete1202\\";
-
-    public void GeraArquivoTexto(List<Item> itens, int mesa) {
+    @Override
+    public void GerarArquivo(List<Item> obj, int mesa) {
         Gson gson = new GsonBuilder().create();
         try {
             File file = new File("Mesa" + mesa + ".txt");
             FileWriter fw = new FileWriter(file);
             BufferedWriter bw = new BufferedWriter(fw);
-            for (Item m : itens) {
+            for (Item m : obj) {
                 String jsonObjeto = gson.toJson(m);
                 bw.append(jsonObjeto.trim());
                 bw.newLine();
@@ -34,10 +33,10 @@ public class Textualizacao {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
-    public List<Item> LeArquivoTexto(String path) {
+    @Override
+    public Object LerArquivo(String path) {
         List<Item> itens = new ArrayList<>();
         try {
             Scanner in = new Scanner(new FileReader(path));

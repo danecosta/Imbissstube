@@ -4,7 +4,6 @@ import Factory.Conexao;
 import java.sql.Connection;
 import Entidades.Item;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,25 +40,6 @@ public class ItemDAO {
         }
     }
 
-    public void atualizar(Item item) throws Exception {
-        if (item != null) {
-            try {
-                Connection conexao = Conexao.getConnection();
-                Statement operacao = conexao.createStatement();
-
-                operacao.executeUpdate(
-                        "UPDATE item SET descricaoItem='"
-                        + item.getDescricaoItem() + "', quantidadeItem="
-                        + item.getQuantidadeItem() + "', refNumMesa="
-                        + item.getRefNumMesa()
-                        + " WHERE idItem=" + item.getIdItem());
-
-            } catch (Exception e) {
-                throw new Exception(e);
-            }
-        }
-    }
-
     public void remover(Item item) throws Exception {
         if (item != null) {
             try {
@@ -73,47 +53,6 @@ public class ItemDAO {
         }
     }
 
-    public List<Item> buscarTodos() throws Exception {
-        try {
-            Connection conexao = Conexao.getConnection();
-            List<Item> itens = new ArrayList<>();
-            Statement operacao = conexao.createStatement();
-            ResultSet resultado = operacao.executeQuery("SELECT * FROM item");
-
-            while (resultado.next()) {
-                Item item = new Item();
-                item.setIdItem(resultado.getInt("idItem"));
-                item.setDescricaoItem(resultado.getString("descricaoItem"));
-                item.setQuantidadeItem(resultado.getInt("quantidadeItem"));
-                item.setRefNumMesa(resultado.getInt("refNumMesa"));
-                itens.add(item);
-            }
-            return itens;
-        } catch (SQLException ex) {
-            throw new Exception(ex);
-        }
-    }
-
-    public Item buscarItemPorID(int id) throws Exception {
-        try {
-            Connection conexao = Conexao.getConnection();
-            Statement operacao = conexao.createStatement();
-            ResultSet resultado = operacao.executeQuery("SELECT * FROM item WHERE idItem=" + id);
-
-            if (resultado.next()) {
-                Item item = new Item();
-                item.setIdItem(resultado.getInt("idItem"));
-                item.setDescricaoItem(resultado.getString("descricaoItem"));
-                item.setQuantidadeItem(resultado.getInt("quantidadeItem"));
-                item.setRefNumMesa(resultado.getInt("refNumMesa"));
-                return item;
-            }
-            return null;
-        } catch (Exception e) {
-            throw new Exception(e);
-        }
-    }
-
     public List<Item> buscarItensPorMesa(int numMesa) throws Exception {
         try {
             Connection conexao = Conexao.getConnection();
@@ -121,7 +60,7 @@ public class ItemDAO {
             List<Item> itens = new ArrayList<>();
             ResultSet resultado = operacao.executeQuery("SELECT * FROM item WHERE refNumMesa=" + numMesa);
 
-            if (resultado.next()) {
+            while (resultado.next()) {
                 Item item = new Item();
                 item.setIdItem(resultado.getInt("idItem"));
                 item.setDescricaoItem(resultado.getString("descricaoItem"));
